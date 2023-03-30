@@ -8,10 +8,11 @@ node {
         docker.image('qnib/pytest').inside {
             sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
         }
-        post {
-            always {
-                junit 'test-reports/results.xml'
-            }
+        try {
+            junit 'test-reports/results.xml'
+        }
+        catch (err) {
+            echo "There was an error with the tests: ${err}"
         }
     }
 }
