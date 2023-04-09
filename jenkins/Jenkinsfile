@@ -24,7 +24,7 @@ node {
             dir(env.BUILD_ID) {
                 unstash(name: 'compiled-results')
                 sh "docker run --rm -v ${VOLUME} ${IMAGE} 'pyinstaller -F add2vals.py'"
-                sh "sleep 1m"
+                // sh "sleep 1m"
             }
             try {
                 def localArtifactPath = "${env.BUILD_ID}/sources/dist/add2vals"
@@ -32,7 +32,10 @@ node {
                 sh "docker run --rm -v ${VOLUME} ${IMAGE} 'rm -rf build dist'"
 
                 withCredentials([sshUserPrivateKey(credentialsId: 'dicoding-ec2-key', keyFileVariable: 'SSH_PRIVATE_KEY')]) {
-                    sh "scp -i ${SSH_PRIVATE_KEY} ${localArtifactPath} ubuntu@108.137.101.111:/home/ubuntu/"
+                    sh """
+                        set +x
+                        scp -i ${SSH_PRIVATE_KEY} ${localArtifactPath} ubuntu@108.137.101.111:/home/ubuntu/
+                    """
                 }
 
             }
@@ -42,66 +45,3 @@ node {
         }
     }
 }
-
-// node {
-//     stage('Build') {
-//         docker.image('python:2-alpine').inside {
-//             sh 'python -m py_compile sources/add2vals.py sources/calc.py'
-//         }
-//     }
-//     stage('Test') {
-//         docker.image('qnib/pytest').inside {
-//             sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
-//         }
-//         try {
-//             junit 'test-reports/results.xml'
-//         }
-//         catch (err) {
-//             echo "There was an error with the tests: ${err}"
-//         }
-//     }
-//     stage('Manual Approval') {
-//         input(message: 'Lanjutkan ke tahap Deploy?')
-//     }
-//     stage('Deploy') {
-//         def localArtifactPath = "${env.WORKSPACE}/archive/dist/add2vals"
-//         withEnv([
-//             VOLUME = "${pwd()}/sources:/src",
-//             IMAGE = 'cdrx/pyinstaller-linux:python2'
-//         ]) {
-//             dir(env.BUILD_ID) {
-//                 unstash 'compiled-results'
-//                 sh "docker run --rm -v ${VOLUME} ${IMAGE} 'pyinstaller -F add2vals.py'"
-//             }
-
-//             post {
-//                 success {
-//                     archiveArtifacts "${env.BUILD_ID}/sources/dist/add2vals"
-//                     sh "docker run --rm -v ${VOLUME} ${IMAGE} 'rm -rf build dist'"
-//                 }
-//             }
-//         }
-//         // try {
-//         //     // ssh ke server tujuan
-//         //     def sshHost = '108.137.101.111'
-//         //     def sshUser = 'ubuntu'
-//         //     def sshKey = credentials('dicoding-ec2-key')
-
-//         //     def ssh = new com.jcraft.jsch.JSch()
-//         //     ssh.addIdentity(sshKey)
-//         //     def session = ssh.getSession(sshUser, sshHost, 22)
-//         //     session.setConfig('StrictHostKeyChecking', 'no')
-//         //     session.connect()
-
-//         //     // Transfer artifact to EC2 instance
-//         //     def scp = session.getScpClient()
-//         //     scp.put(localArtifactPath, '/home/ubuntu')
-
-//         //     // Disconnect SSH session
-//         //     session.disconnect()
-//         // }
-//         // catch (err) {
-//         //     echo "There was an error with the deployment: ${err}"
-//         // }
-//     }
-// }
