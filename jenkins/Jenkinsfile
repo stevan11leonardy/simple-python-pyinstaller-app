@@ -18,7 +18,10 @@ node {
             }
         }
     }
-    stage('Deliver') {
+    stage('Manual Approval') {
+        input(message: 'Lanjutkan ke tahap Deploy?')
+    }
+    stage('Deploy') {
         withEnv(['VOLUME=$(pwd)/sources:/src', 'IMAGE=cdrx/pyinstaller-linux:python2']) {
             dir(env.BUILD_ID) {
                 unstash(name: 'compiled-results')
