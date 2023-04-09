@@ -31,19 +31,10 @@ node {
                 archiveArtifacts localArtifactPath
                 sh "docker run --rm -v ${VOLUME} ${IMAGE} 'rm -rf build dist'"
 
-                sshPublisher(publishers: [
-                    sshPublisherDesc(
-                        configName: 'dicoding-ec2-key',
-                        transfers: [
-                            sshTransfer(
-                                execCommand: 'mkdir -p /home/ubuntu/python',
-                                execTimeout: 120000,
-                                sourceFiles: localArtifactPath,
-                                remoteDirectory: '/home/ubuntu/python'
-                            )
-                        ]
-                    )
-                ])
+                withCredentials([sshUserPrivateKey(credentialsId: 'dicoding-ec2-key', keyFileVariable: 'SSH_PRIVATE_KEY')]) {
+                    sh "scp -i ${SSH_PRIVATE_KEY} ${localArtifactPath} ubuntu@108.137.101.111:/home/ubuntu/"
+                }
+
             }
             catch (err) {
                 echo "There was an error with the deployment: ${err}"
