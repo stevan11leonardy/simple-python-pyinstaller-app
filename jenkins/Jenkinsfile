@@ -24,7 +24,7 @@ node {
             dir(env.BUILD_ID) {
                 unstash(name: 'compiled-results')
                 sh "docker run --rm -v ${VOLUME} ${IMAGE} 'pyinstaller -F add2vals.py'"
-                // sh "sleep 1m"
+                sh "sleep 1m"
             }
             try {
                 def localArtifactPath = "${env.BUILD_ID}/sources/dist/add2vals"
