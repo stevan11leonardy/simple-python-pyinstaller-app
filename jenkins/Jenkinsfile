@@ -31,23 +31,19 @@ node {
                 archiveArtifacts localArtifactPath
                 sh "docker run --rm -v ${VOLUME} ${IMAGE} 'rm -rf build dist'"
 
-                // ssh ke server tujuan
-                def sshHost = '108.137.101.111'
-                def sshUser = 'ubuntu'
-                def sshKey = credentials('dicoding-ec2-key')
-
-                def ssh = new com.jcraft.jsch.JSch()
-                ssh.addIdentity(sshKey)
-                def session = ssh.getSession(sshUser, sshHost, 22)
-                session.setConfig('StrictHostKeyChecking', 'no')
-                session.connect()
-
-                // Transfer artifact to EC2 instance
-                def scp = session.getScpClient()
-                scp.put(localArtifactPath, '/home/ubuntu')
-
-                // Disconnect SSH session
-                session.disconnect()
+                sshPublisher(publishers: [
+                    sshPublisherDesc(
+                        configName: 'dicoding-ec2-key',
+                        transfers: [
+                            sshTransfer(
+                                execCommand: 'mkdir -p /home/ubuntu/python',
+                                execTimeout: 120000,
+                                sourceFiles: localArtifactPath,
+                                remoteDirectory: '/home/ubuntu/python'
+                            )
+                        ]
+                    )
+                ])
             }
             catch (err) {
                 echo "There was an error with the deployment: ${err}"
