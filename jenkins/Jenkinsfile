@@ -19,7 +19,6 @@ node {
         input(message: 'Lanjutkan ke tahap Deploy?')
     }
     stage('Deploy') {
-        def localArtifactPath = "${env.WORKSPACE}/archive/dist/add2vals"
         withEnv([
             VOLUME = "${pwd()}/sources:/src",
             IMAGE = 'cdrx/pyinstaller-linux:python2'
