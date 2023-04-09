@@ -34,7 +34,7 @@ node {
                 withCredentials([sshUserPrivateKey(credentialsId: 'dicoding-ec2-key', keyFileVariable: 'SSH_PRIVATE_KEY')]) {
                     sh """
                         set +x
-                        scp -i ${SSH_PRIVATE_KEY} ${localArtifactPath} ubuntu@108.137.101.111:/home/ubuntu/
+                        scp -o StrictHostKeyChecking=no -i ${SSH_PRIVATE_KEY} ${localArtifactPath} ubuntu@108.137.101.111:/home/ubuntu/
                     """
                 }
 
