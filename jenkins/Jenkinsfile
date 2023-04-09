@@ -20,36 +20,38 @@ node {
     }
     stage('Deploy') {
         def localArtifactPath = "${env.WORKSPACE}/archive/dist/add2vals"
-        
-        docker.image('cdrx/pyinstaller-linux:python2').inside("--entrypoint='/bin/sh cdrx/pyinstaller-linux -c "apt-get update -y && apt-get install -y wget && /entrypoint.sh"'") {
+        docker.image('cdrx/pyinstaller-linux:python2').inside {
             sh 'pyinstaller --onefile sources/add2vals.py'
-
-            archiveArtifacts artifacts: 'dist/add2vals'
-
-            // jeda 1 menit
-            sh 'sleep 1m'
         }
-        try {
-            // ssh ke server tujuan
-            def sshHost = '108.137.101.111'
-            def sshUser = 'ubuntu'
-            def sshKey = credentials('dicoding-ec2-key')
 
-            def ssh = new com.jcraft.jsch.JSch()
-            ssh.addIdentity(sshKey)
-            def session = ssh.getSession(sshUser, sshHost, 22)
-            session.setConfig('StrictHostKeyChecking', 'no')
-            session.connect()
-
-            // Transfer artifact to EC2 instance
-            def scp = session.getScpClient()
-            scp.put(localArtifactPath, '/home/ubuntu')
-
-            // Disconnect SSH session
-            session.disconnect()
+        post {
+            success {
+                // jeda 1 menit
+                sh 'sleep 1m'
+                archiveArtifacts 'dist/add2vals'
+            }
         }
-        catch (err) {
-            echo "There was an error with the deployment: ${err}"
-        }
+        // try {
+        //     // ssh ke server tujuan
+        //     def sshHost = '108.137.101.111'
+        //     def sshUser = 'ubuntu'
+        //     def sshKey = credentials('dicoding-ec2-key')
+
+        //     def ssh = new com.jcraft.jsch.JSch()
+        //     ssh.addIdentity(sshKey)
+        //     def session = ssh.getSession(sshUser, sshHost, 22)
+        //     session.setConfig('StrictHostKeyChecking', 'no')
+        //     session.connect()
+
+        //     // Transfer artifact to EC2 instance
+        //     def scp = session.getScpClient()
+        //     scp.put(localArtifactPath, '/home/ubuntu')
+
+        //     // Disconnect SSH session
+        //     session.disconnect()
+        // }
+        // catch (err) {
+        //     echo "There was an error with the deployment: ${err}"
+        // }
     }
 }
